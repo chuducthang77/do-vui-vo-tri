@@ -121,12 +121,6 @@ h1{margin:6px 0 0;font-size:28px;font-weight:800;letter-spacing:-.5px}
 .puz{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:100%;aspect-ratio:1;background:var(--bg);border-radius:14px;overflow:hidden}
 .pz{background-size:300% 300%;cursor:pointer;outline:3px solid transparent;outline-offset:-3px}
 .pz.sel{outline-color:var(--accent)}
-.ft-box{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#000}
-.ft-img{position:absolute;inset:0;background-size:cover;background-position:center}
-.ft-after{opacity:0;transform:scale(1.08);transition:opacity 1s ease,transform 1.2s ease}
-.ft-after.show{opacity:1;transform:scale(1)}
-.ft-box.flash::after{content:'';position:absolute;inset:0;background:#fff;animation:ftflash .6s forwards}
-@keyframes ftflash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
 .thumb{width:72px;height:72px;border-radius:10px;background-size:cover;background-position:center;flex:none}
 
 /* Video + final */
@@ -213,8 +207,6 @@ const CONFIG = {
   videoSrc: "v1.mp4",
   // Ảnh cho trò ghép hình. Mặc định là ảnh hợp thể nhúng sẵn; muốn đổi thì ghi tên file, ví dụ "p2.jpg".
   coupleImg: EMBED_PUZZLE,
-  // Ảnh hai người tạo dáng hợp thể y như ảnh mẫu, hiện ra sau khi ghép xong. Ví dụ "p3.jpg". Để trống "" = ảnh tạm.
-  puzzleFinalImg: "",
   puzzleDoneTitle: "Hợp thể thành công! 🔥",
   puzzleDoneNote: "Hai người... chập lại làm một 😏",
 
@@ -392,18 +384,6 @@ function placeholderCouple(){
   return svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'>${cells}</svg>`);
 }
 const RING_BG = CONFIG.imageSrc ? `url("${CONFIG.imageSrc}")` : placeholderRing();
-function placeholderFinal(){
-  return svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 960 537'>
-    <defs><linearGradient id='b' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#1e3aa8'/><stop offset='1' stop-color='#4f7cff'/></linearGradient></defs>
-    <rect width='960' height='537' fill='url(#b)'/>
-    <text x='330' y='300' font-size='150' text-anchor='middle'>🙋‍♂️</text>
-    <text x='630' y='300' font-size='150' text-anchor='middle'>🙋‍♀️</text>
-    <text x='480' y='230' font-size='70' text-anchor='middle'>⚡</text>
-    <text x='480' y='430' font-size='34' font-weight='bold' text-anchor='middle' fill='#fff' font-family='sans-serif'>ẢNH TẠM — ẢNH 2 ĐỨA TẠO DÁNG HỢP THỂ</text>
-    <text x='480' y='475' font-size='24' text-anchor='middle' fill='#dfe6ff' font-family='sans-serif'>Sửa puzzleFinalImg trong CONFIG</text>
-  </svg>`);
-}
-const FINAL_PUZZLE_BG = CONFIG.puzzleFinalImg ? `url("${CONFIG.puzzleFinalImg}")` : placeholderFinal();
 const COUPLE_BG = CONFIG.coupleImg ? `url("${CONFIG.coupleImg}")` : placeholderCouple();
 
 /* =====================================================================
@@ -809,24 +789,10 @@ function gPuzzle(stage, win, T){
         else if (sel === idx){ sel = null; }
         else { [order[sel], order[idx]] = [order[idx], order[sel]]; sel = null; }
         draw();
-        if (order.every((v, i) => v === i)){ solved = true; T.to(transform, 600); }
+        if (order.every((v, i) => v === i)){ solved = true; T.to(() => winPanel(stage, CONFIG.puzzleDoneTitle, CONFIG.puzzleDoneNote, null, win), 600); }
       });
       grid.append(t);
     });
-  }
-  // Ghép xong: ảnh hợp thể chuyển dần sang ảnh của hai người
-  function transform(){
-    stage.innerHTML = '';
-    const before = h('div', { class: 'ft-img' }); before.style.backgroundImage = COUPLE_BG;
-    const after = h('div', { class: 'ft-img ft-after' }); after.style.backgroundImage = FINAL_PUZZLE_BG;
-    const box = h('div', { class: 'ft-box', style: `aspect-ratio:${ratio}` }, before, after);
-    const cap = h('div', { class: 'q center-text' }, 'Hợp thể... FUUUU... SION! ⚡');
-    stage.append(box, cap);
-    T.to(() => { box.classList.add('flash'); }, 1400);
-    T.to(() => { after.classList.add('show'); cap.textContent = CONFIG.puzzleDoneTitle; }, 1700);
-    T.to(() => stage.append(
-      h('p', { class: 'sub center-text' }, CONFIG.puzzleDoneNote),
-      h('button', { class: 'btn primary', onclick: win }, 'Mở mảnh ghép 🧩')), 2900);
   }
   draw();
 }
